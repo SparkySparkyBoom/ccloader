@@ -3,7 +3,7 @@ package ccloader
 import Util.notNewline
 import akka.actor.ActorRef
 import scala.util.parsing.combinator.RegexParsers
-import java.io.{FileInputStream, DataInputStream, BufferedInputStream}
+import java.io.{InputStream, DataInputStream, BufferedInputStream}
 import scala.collection.mutable
 
 /**
@@ -13,7 +13,7 @@ trait HeaderParser extends RegexParsers {
   def keyword = regex( """(([a-zA-Z])|(\-))+""".r)
   def anything = regex(".+".r)
   def integer = regex( """\d+""".r)
-  def separator = literal(" :")
+  def separator = literal(": ")
 
   def keyVal: Parser[(String, String)] = keyword ~ separator ~ anything ^^ {
     case key ~ _ ~ value =>
@@ -25,7 +25,7 @@ trait HeaderParser extends RegexParsers {
   }
 }
 
-class CCParser(loader: ActorRef, fis: FileInputStream) extends Runnable with HeaderParser {
+class CCParser(loader: ActorRef, is: InputStream) extends Runnable with HeaderParser {
   def readWhile(implicit dis: DataInputStream, predicate: Byte => Boolean): Array[Byte] = {
     val bytes = new mutable.ArrayBuffer[Byte]
     var done = false
@@ -41,15 +41,15 @@ class CCParser(loader: ActorRef, fis: FileInputStream) extends Runnable with Hea
   }
 
   def run(): Unit = {
-    implicit val dis = new DataInputStream(new BufferedInputStream(fis))
+    implicit val dis = new DataInputStream(new BufferedInputStream(is))
 
     var parsingResponse = false
     var url: String = ""
     var date: String = ""
     var contentLength: Int = 0
 
-    while (fis.available() > 0) {
-      val line = new String(readWhile(dis, notNewline), "US-ASCII")
+    while (dis.available() > 0) {
+      val line = new String(readWhile(dis, notNewline), "UTF-8")
       if (!parsingResponse) {
         parseKeyVal(line) match {
           case Some(("WARC-Type", "response")) =>
