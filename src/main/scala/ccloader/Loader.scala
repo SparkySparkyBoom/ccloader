@@ -1,6 +1,8 @@
 package ccloader
 
-import Main.{readWhile, notNewline}
+import Util.notNewline
+import org.joda.time.format.DateTimeFormat
+import akka.actor.{Props, ActorSystem, ActorRef, Actor}
 
 class Loader extends Actor with HeaderParser {
   private val dateFormatter = DateTimeFormat.forPattern("yyyy-mm-dd'T'ZHH:mm:ss'Z'").withOffsetParsed()

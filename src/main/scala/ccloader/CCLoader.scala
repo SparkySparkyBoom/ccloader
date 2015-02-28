@@ -16,26 +16,10 @@ object Main {
   def main(args: Array[String]): Unit = {
     val warcFile = args(0)
     implicit val system = ActorSystem("loader-system")
+
+    val fis = new FileInputStream(new File(warcFile))
     val loader = system.actorOf(Props[Loader])
-    val ccp = new CCParser(loader, warcFile)
+    val ccp = new CCParser(loader, fis)
     new Thread(ccp).run()
-  }
-
-  def readWhile(implicit dis: DataInputStream, predicate: Byte => Boolean): Array[Byte] = {
-    val bytes = new mutable.ArrayBuffer[Byte]
-    var done = false
-    while (!done) {
-      val b = dis.readByte()
-      if (predicate(b)) {
-        bytes += b
-      } else {
-        done = true
-      }
-    }
-    bytes.toArray
-  }
-
-  def notNewline(b: Byte) = {
-    b != '\n'.toByte
   }
 }

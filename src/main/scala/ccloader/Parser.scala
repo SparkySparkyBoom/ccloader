@@ -1,6 +1,10 @@
 package ccloader
 
-import Main.{readWhile, notNewline}
+import Util.notNewline
+import akka.actor.ActorRef
+import scala.util.parsing.combinator.RegexParsers
+import java.io.{FileInputStream, DataInputStream, BufferedInputStream}
+import scala.collection.mutable
 
 /**
  * Functions for parsing WARC and HTTP headers.
@@ -21,9 +25,22 @@ trait HeaderParser extends RegexParsers {
   }
 }
 
-class CCParser(loader: ActorRef, filename: String) extends Runnable with HeaderParser {
+class CCParser(loader: ActorRef, fis: FileInputStream) extends Runnable with HeaderParser {
+  def readWhile(implicit dis: DataInputStream, predicate: Byte => Boolean): Array[Byte] = {
+    val bytes = new mutable.ArrayBuffer[Byte]
+    var done = false
+    while (!done) {
+      val b = dis.readByte()
+      if (predicate(b)) {
+        bytes += b
+      } else {
+        done = true
+      }
+    }
+    bytes.toArray
+  }
+
   def run(): Unit = {
-    val fis = new FileInputStream(new File(filename))
     implicit val dis = new DataInputStream(new BufferedInputStream(fis))
 
     var parsingResponse = false
