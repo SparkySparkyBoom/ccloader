@@ -1,11 +1,6 @@
 package ccloader
 
-import java.nio.ByteBuffer
-import java.nio.charset.{CodingErrorAction, Charset}
-import akka.util.ByteString
 import java.io.{File, FileInputStream}
-import scala.io.Source
-import scala.collection.mutable
 import akka.actor.ActorSystem
 
 case class Resource(url: String, date: String, content: Array[Byte])
