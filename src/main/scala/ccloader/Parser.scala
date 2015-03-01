@@ -1,7 +1,7 @@
 package ccloader
 
 import Util.notNewline
-import akka.actor.ActorRef
+import akka.actor.{ActorRef, ActorSystem, Props}
 import scala.util.parsing.combinator.RegexParsers
 import java.io.{InputStream, DataInputStream, BufferedInputStream}
 import scala.collection.mutable
@@ -25,8 +25,8 @@ trait HeaderParser extends RegexParsers {
   }
 }
 
-class CCParser(loader: ActorRef, is: InputStream) extends Runnable with HeaderParser {
-  def readWhile(implicit dis: DataInputStream, predicate: Byte => Boolean): Array[Byte] = {
+class CCParser(is: InputStream, loader: Option[ActorRef] = None)(implicit system: ActorSystem) extends Runnable with HeaderParser {
+  def readWhile(predicate: Byte => Boolean)(implicit dis: DataInputStream): Array[Byte] = {
     val bytes = new mutable.ArrayBuffer[Byte]
     var done = false
     while (!done) {
@@ -49,7 +49,7 @@ class CCParser(loader: ActorRef, is: InputStream) extends Runnable with HeaderPa
     var contentLength: Int = 0
 
     while (dis.available() > 0) {
-      val line = new String(readWhile(dis, notNewline), "UTF-8")
+      val line = new String(readWhile(notNewline), "UTF-8")
       if (!parsingResponse) {
         parseKeyVal(line) match {
           case Some(("WARC-Type", "response")) =>
@@ -64,7 +64,11 @@ class CCParser(loader: ActorRef, is: InputStream) extends Runnable with HeaderPa
       } else {
         val content = new Array[Byte](contentLength)
         dis.read(content)
-        loader ! Resource(url, date, content)
+        val resource = Resource(url, date, content)
+        loader match {
+          case Some(a) => a ! resource
+          case None => system.actorOf(Props[Loader]) ! resource
+        }
       }
     }
   }

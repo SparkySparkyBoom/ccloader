@@ -9,8 +9,7 @@ class HeaderParserSpec extends Specification {
 
   def e1 = {
     class p
-    val parser = new p with HeaderParser {}
-    // println(parser.parse(parser.keyVal, "Key: value"))
-    parser.parseKeyVal("Key: value") mustEqual Some("Key", "value")
+    val parser = new p with HeaderParser
+    parser.parseKeyVal("Key: value") === Some("Key", "value")
   }
 }
