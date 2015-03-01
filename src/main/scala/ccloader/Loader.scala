@@ -1,11 +1,11 @@
 package ccloader
 
-import Util.notNewline
+import akka.actor.Actor
+import ccloader.Util.notNewline
 import org.joda.time.format.DateTimeFormat
-import akka.actor.{Props, ActorSystem, ActorRef, Actor}
 
 class Loader extends Actor with HeaderParser {
-  private val dateFormatter = DateTimeFormat.forPattern("yyyy-mm-dd'T'ZHH:mm:ss'Z'").withOffsetParsed()
+  val dateFormatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZ").withOffsetParsed()
 
   override def receive = {
     case Resource(url, date, b) =>
@@ -20,6 +20,7 @@ class Loader extends Actor with HeaderParser {
               contentType = t
               if (!contentType.contains("text/html"))
                 done = true
+            case _ =>
           }
         } else {
           val html = new String(b, "UTF-8")

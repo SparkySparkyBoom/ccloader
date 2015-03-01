@@ -1,11 +1,14 @@
 package ccloader
 
 import java.util.UUID
-import com.websudos.phantom.zookeeper.SimpleCassandraConnector
+
+import com.datastax.driver.core.{QueryOptions, Cluster}
 import com.websudos.phantom.Implicits._
+import com.websudos.phantom.zookeeper.SimpleCassandraConnector
 import org.joda.time.DateTime
 
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
 
 case class Page(url: String,
                 html: String,
@@ -41,8 +44,14 @@ object Pages extends Pages with Connector {
       .value(_.timestamp, page.timestamp)
       .future()
   }
+
+  def createTable() = {
+    Await.result(create.future()(session), 10.seconds)
+  }
 }
 
 trait Connector extends SimpleCassandraConnector {
   override val keySpace = "hippo"
 }
+
+

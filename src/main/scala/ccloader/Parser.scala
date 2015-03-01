@@ -54,12 +54,14 @@ class CCParser(is: InputStream, loader: Option[ActorRef] = None)(implicit system
         parseKeyVal(line) match {
           case Some(("WARC-Type", "response")) =>
             parsingResponse = true
+          case _ =>
         }
       } else if (line != "") {
         parseKeyVal(line) match {
           case Some(("WARC-Date", _date)) => date = _date
-          case Some(("Content-Length", len)) => contentLength = len.toInt
+          case Some(("Content-Length", len)) => contentLength = len.trim.toInt
           case Some(("WARC-Target-URI", _url)) => url = _url
+          case _ =>
         }
       } else {
         val content = new Array[Byte](contentLength)
